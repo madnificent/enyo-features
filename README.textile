@@ -1,0 +1,220 @@
+h1. Features: death of repetition, birth of clarity
+
+Features brings a configurable metaprogramming technique to enyojs. Patterns which often occur in the definition of kinds can be abstracted into declarative code. This approach leaves clarity behind, where repetitive code has been removed.
+
+h2. Using features
+
+You can use features in any <code>enyo.Object</code>.  The feature will inject the necessary code for your definition when the object is defined.  Features can extend specific methods (when hooks have been put into place) and can rewrite the recepy of the prototype.  __``Professor, stop this boring crap, gimme something tangible!´´__
+
+A common feature we -- at knowified software -- discovered was the publishing of a variable by which a named component could be configured.  The following sounds boring, still, but the code of the of the following example will clarify things.  We have a <code>ThreePane</code> control which has a left, a center and a right component to display. The definition for each of these components is supplied by the component in which the panel control resides. Aside from the code which actually defines how the panel works, the boilerplate for managing its named components looks like this:
+
+<pre><code>
+enyo.kind({
+  name : "ThreePane",
+  published : { 
+    left : null,
+    center : null,
+    right : null
+  },
+  components : [
+    { name : left   , components : [ { content : "I am left"} ] },
+    { name : center , components : [ { content : "I am center"} ] },
+    { name : right  , components : [ { content : "I am right"} ] },
+  ],
+  leftChanged : function( old ){
+    var left = this.$.left;
+    left.destroyComponents();
+    left.createComponent(this.left);
+    left.render();
+  },
+  centerChanged : function( old ){
+    var center = this.$.center;
+    center.destroyComponents();
+    center.createComponent(this.center);
+    center.render();
+  },
+  rightChanged : function( old ){
+    var right = this.$.right;
+    right.destroyComponents();
+    right.createComponent(this.right);
+    right.render();
+  },
+  getLeft : function() {
+    this.$.left;
+  },
+  getCenter : function() {
+    this.$.center;
+  },
+  getRight : function() {
+    this.$.right;
+  },
+  create : function() {
+    this.inherited(arguments);
+    this.leftChanged();
+    this.centerChanged();
+    this.rightChanged();
+  }
+} );
+</code></pre>
+
+For me, that leaves a whole lot of room for tiny typos and i-havent-paid-attention-whilst-coding-this-errors.  All leading to unexpected bugs.  I don't like bugs.  In fact, we don't use the above code, so it may well contain some typos or tiny bugs.  Some of these bugs we'll only discover when the app is already being tested.  Not good for our street cred.
+
+A <code>Feature</code> allows you to remove that boilerplate code, so you can drink cocktails on the beach instead of writing boring code and hunting for typos whilst you demo your app. When using features, the code is simplified a lot. You read the following updated code whilst I grab myself a fresh beer.
+
+<pre><code>
+enyo.kind( {
+  name : "ThreePane",
+  features : [
+    { kind : ks.PublishComponent, publishedName : "left" },
+    { kind : ks.PublishComponent, publishedName : "center" },
+    { kind : ks.PublishComponent, publishedName : "right" }
+  ],
+  components : [
+    { name : left   , components : [ { content : "I am left"} ] },
+    { name : center , components : [ { content : "I am center"} ] },
+    { name : right  , components : [ { content : "I am right"} ] },
+  ]
+} );
+</code></pre>
+
+Both examples serve the same purpose, but the latter didn't make you think for too long. It __just works__(TM).
+
+h2. Load it all with package.js
+
+Features is split in two parts.  The former is the definition of the features library, the latter contains the implementation of various features.  If you want to use features and all of the included contribs, you should add the folder <code>$lib/enyo-features</code> and the folder <code>$lib/enyo-features/contrib</code> to your package.js file.
+
+h2. Increase your code skillz, define features!
+
+As with most metaprogramming techniques, the use of a feature is much simpler than its definition. In order to understand features we walk over each of the things which need to be done in the previous example, given both the feature object and the object which uses the feature. After that is described we combine the pieces in the <code>PublishedComponent</code> kind.
+
+__``Grab yourself a coffee, we're going straight into the matrix!´´__
+
+__``No srsly, you need caffeine.´´__
+
+h3. Conventions as a first aid to battle complexity
+
+The code we need to write to implement a feature is rather abstract.  In order to make it all a tad easier to understand we use some conventions on the variable names.  We call the object which uses the feature the __user__ of the feature and place it in the variable <code>user</code>. The __feature__ is always stored in the variable <code>feature</code>.
+
+h3. Publishing the variable
+
+When the feature is being used, we modify the recipe (or definition) of it, so it publishes the variable.  We only want to specify the feature if the recipe doesn't already specify it (the user could provide a default value).
+
+The published name is available in the feature's <code>publishedName</code>.  We are assuming both <code>user</code> and <code>feature</code> have been defined.  It'll become clear where they come from later on in this description.
+
+<pre><code>
+user.published = user.published || {};
+if( !user.published[feature.publishedName] ){
+    user.published[feature.publishedName] = null;
+}
+</pre></code>
+
+
+h3. Defining the getter function
+
+The getter function is defined on the recipe of the modified function.  Inside the function, we want to have access to the instance which was built from the recipe.  Try to keep your head at it!
+
+When we assign the function <code>user</code> contains the recipe.  When we execute the function (eg: <code>getCenter()</code>), <code>this</code> is bound to the instance which was built from the recipe.  Hence we assign <code>user</code> to <code>this</code>.
+
+<pre><code>
+var getterName = "get" + enyo.cap(feature.publishedName);
+user[getterName] = function(){
+  var user = this;
+
+  return user.$[feature.publishedName];
+}
+</code></pre>
+
+Contemplate on which objects are in which variable for a moment.  The <code>user</code> which is used in <code>user[getterName]</code> is the recipe of the instance.  The <code>user</code> which is used in <code>user.$[feature.publishedName]</code> contains the instance which was built from the recipe.  Compare the rest of the code to the code for <code>getCenter()</code> and you should be able to grasp it.
+
+h3. Updating the named component
+
+Let's take the example of <code>center</code> again.  When <code>centerChanged</code> is called, the named component should be updated.  For this we create a function which we will set in the recipe of the instance.  It is very similar to the previous example, with the sole difference that the method body has a bit more content to it.
+
+<pre><code>
+var changedName = feature.publishedName + "Changed";
+user[changedName] = function(old){
+  var user = this;
+
+  user.$[feature.publishedName].destroyComponents();
+  user.$[feature.publishedName].createComponent(user[feature.publishedName]);
+  user.$[feature.publishedName].render();
+}
+</code></pre>
+
+If the previous example was clear, with respect to which instance was available where, then this shouldn't be a big step up.
+
+h3. Extending the create method
+
+Lastly we need to ensure the named components are initialized upon the creation of the <code>Control</code> which uses <code>NamedFeature</code>.  The feature library offers support for extending the <code>create</code> function.  For this, we implement the <code>atCreate</code> function of the feature.
+
+The library calls the function atCreate of the Feature (hence, <code>this</code> will be bound to the feature, not the <code>user</code>).  The function receives the <code>user</code> of which the feature should extend the creation.
+
+<pre><code>
+atCreate : function( user ){
+  var feature = this;
+
+  if( user[feature.publishedName] ) {
+    user[feature.publishedName + "Changed"]();
+  }
+}
+</code></pre>
+
+The main difference between this and the previous definitions of our feature is that the scope is different in this code.  That is exactly the reason why we discourage the direct use of <code>this</code> in the definition of the feature.  Naming the feature and the user explicitly makes the feature's definition easier to grasp.
+
+h3. Hooking it all together.
+
+The three former extensions operate on the recipe of the instance which uses the feature.  They are defined in the <code>atKind</code> function of the feature.  The <code>atKind</code> function is defined on the feature, so when it executes <code>this</code> will be the feature.  It receives the recepy as its sole argument.  The three former extensions are placed inside the <code>atKind</code> function.
+
+The last extension operates on the instance of the recipe.  It extends <code>atCreate</code> as described earlier.
+
+<pre><code>
+enyo.kind({
+    name : "ks.PublishComponent",
+    kind : enyo.Feature,
+    publishedName : null,
+    atKind : function( user ) {
+        var feature = this;
+
+        // Publishing the variable
+        user.published = user.published || {};
+        if( !user.published[feature.publishedName] ){
+            user.published[feature.publishedName] = null;
+        }
+        
+        // Defining the getter function
+        var getterName = "get" + enyo.cap(feature.publishedName);
+        user[ getterName ] = function(){
+            var user = this;
+            
+            return user.$[feature.publishedName];
+        };
+
+        // Updating the named component
+        var changedName = feature.publishedName + "Changed";
+        user[changedName] = function(old){
+            var user = this;
+
+            user.$[feature.publishedName].destroyComponents();
+            user.$[feature.publishedName].createComponent(user[feature.publishedName]);
+            user.$[feature.publishedName].render();
+        };
+    },
+    // Extending the create method
+    atCreate : function( user ) {
+        var feature = this;
+
+        if( user[feature.publishedName] ) {
+            user[feature.publishedName + "Changed"]();
+        }
+    }
+});
+</code></pre>
+
+h2. Future work
+
+Although the current API for features feels fairly solid to us, features is still under active development.  Support for <code>atDestroy</code> has recently been added and we're looking into the edge-cases for the definition and use of features.  The library is driven by practical use.  In the future, this section will contain information on these edge-cases.
+
+
+h2. The slaves who served you
+
+This library has been built by Karel Kremer and Aad Versteden for knowified software.
