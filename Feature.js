@@ -1,5 +1,5 @@
 /**
-   enyo.Feature is the kind of which all features extend.  It is the basic building
+   feature.Feature is the kind of which all features extend.  It is the basic building
    block for programatically altering your classes.
 
    TODO: Add comments on how to use this
