@@ -11,7 +11,7 @@
    it is advised to look at one track at a time
 */
 enyo.kind({
-    name : "ks.PublishComponent",
+    name : "feature.PublishComponent",
     kind : enyo.Feature,
     //* @public
     /**
@@ -26,7 +26,7 @@ enyo.kind({
         var feature = this;          // A: feature is the object representing this additional feature
 
         if( ! feature.publishedName ) {
-            throw "ks.NamedComponent needs publishedName to be set";
+            throw "feature.NamedComponent needs publishedName to be set";
         }
 
         // B: publish the variable in the user object

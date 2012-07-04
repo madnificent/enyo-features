@@ -1,8 +1,8 @@
 // with the feature 14 loc
 enyo.kind({
-    name: "ks.pc.ExampleWithFeature",
+    name: "feature.pc.ExampleWithFeature",
     kind: enyo.Control,
-    features : [ { kind : ks.PublishComponent ,
+    features : [ { kind : feature.PublishComponent ,
                    publishedName : "example" } ],
     components : [ { tag : "h1",
                      content : "Example with feature",
@@ -16,7 +16,7 @@ enyo.kind({
 
 // without the feature 27 loc
 enyo.kind({
-    name: "ks.pc.ExampleNoFeature",
+    name: "feature.pc.ExampleNoFeature",
     kind: enyo.Control,
     published: { example : null },
     components : [ { tag : "h1",

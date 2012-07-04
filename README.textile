@@ -65,9 +65,9 @@ A <code>Feature</code> allows you to remove that boilerplate code, so you can dr
 enyo.kind( {
   name : "ThreePane",
   features : [
-    { kind : ks.PublishComponent, publishedName : "left" },
-    { kind : ks.PublishComponent, publishedName : "center" },
-    { kind : ks.PublishComponent, publishedName : "right" }
+    { kind : feature.PublishComponent, publishedName : "left" },
+    { kind : feature.PublishComponent, publishedName : "center" },
+    { kind : feature.PublishComponent, publishedName : "right" }
   ],
   components : [
     { name : left   , components : [ { content : "I am left"} ] },
@@ -169,7 +169,7 @@ The last extension operates on the instance of the recipe.  It extends <code>atC
 
 <pre><code>
 enyo.kind({
-    name : "ks.PublishComponent",
+    name : "feature.PublishComponent",
     kind : enyo.Feature,
     publishedName : null,
     atKind : function( user ) {
