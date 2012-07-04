@@ -1,4 +1,5 @@
 enyo.depends(
     "PublishComponent",
-    "IsMixin"
+    "IsMixin",
+    "HasMixins"
 );
