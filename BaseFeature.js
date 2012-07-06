@@ -5,10 +5,16 @@
    TODO: Add comments on how to use this
 */
 enyo.kind({
-    name: "feature.Feature",
-    kind: feature.BaseFeature,
-    features : [ { kind : feature.PropagateButKind } ],
+    name: "feature.BaseFeature",
+    kind: enyo.Component,
     //* @public
+    /**
+       If onPropagate returns a truethy value, it will be added to the features of the kind which extends the kind with this feature.
+    */
+    onPropagate: function(that){
+        // return this;
+        return null;
+    },
     /**
        If atKind in truthy, it should contain a function which can modify the description of the kind, before the kind itself is created.  It can symbolically modify and extend the kind before the kind is created.  The function should make a call to this.inherited(arguments) as its first action.
     */
