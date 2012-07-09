@@ -27,8 +27,10 @@ feature.manageFeatures = function(inProps){
     var superKind = inProps.kind ? ( typeof inProps.kind == "string" ? enyo.getObject( inProps.kind ) : inProps.kind ) : enyo.Control;
     enyo.map((superKind && superKind.prototype.features) || [] ,
              function(feature) {
-                 if(feature.propagate) {
-                     inProps.features.push( feature );
+                 var newFeature = ( feature.onPropagate
+                                    && feature.onPropagate( inProps ) );
+                 if( newFeature ) {
+                     inProps.features.push( newFeature );
                  }
              });
 

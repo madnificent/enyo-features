@@ -1,4 +1,7 @@
 enyo.depends(
-    "Feature.js",
-    "enyo-hooks.js"
+    "BaseFeature.js",
+    "enyo-hooks.js",
+    "PropagateAll.js",
+    "PropagateButKind.js",
+    "Feature.js"
 );

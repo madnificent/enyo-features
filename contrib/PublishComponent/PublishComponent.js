@@ -12,7 +12,7 @@
 */
 enyo.kind({
     name : "feature.PublishComponent",
-    kind : enyo.Feature,
+    kind : feature.Feature,
     //* @public
     /**
        B: publishedName is the name of the nested component.
@@ -54,6 +54,11 @@ enyo.kind({
             user.$[feature.publishedName].render();
         };
     },
+    // onPropagate : function( user ){
+    //     var feature = this;
+        
+    //     return this; // it would be better to propagate something which doesn't propagate our kind
+    // },
     // A: atCreate is called whenever a component is instantiated.  it is called at the end of "create" of the Component
     atCreate : function( user ) {// A: user is the object which has been built from the recipe.
         var feature = this;          // A: atCreate is called on the feature, so "this" is the feature itself.
