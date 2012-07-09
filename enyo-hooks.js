@@ -47,7 +47,6 @@ enyo.kind = function(inProps) {
 }
 
 for( var property in feature.storage.enyoKind ) {
-    console.log( "copying property " + property );
     enyo.kind[property] = feature.storage.enyoKind[property];
 }
 
